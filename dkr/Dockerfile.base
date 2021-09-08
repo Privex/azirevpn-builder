@@ -1,0 +1,53 @@
+FROM OS_REPLACE 
+
+WORKDIR /build
+VOLUME /output
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND ${DEBIAN_FRONTEND}
+
+ARG APT_REPO="se1.apt-cache.privex.io"
+ENV APT_REPO ${APT_REPO}
+
+COPY replace_repo.sh /build/
+RUN chmod +x /build/replace_repo.sh && /build/replace_repo.sh "$APT_REPO"
+
+RUN apt-get update -qy && \
+    apt-get install -qy wget curl devscripts equivs dpkg-dev build-essential make cmake sudo
+
+SHELL ["/bin/bash", "-c"]
+
+ARG AZIRE_SRC="https://ipfs.wtf/ipfs/QmQskF4QhzbxGVmwSk86BM3VLJKtJNrFn2nnTMyYpzeQLu/azire.tar.gz"
+ENV AZIRE_SRC ${AZIRE_SRC}
+
+ARG AZIRE_DST="/build"
+ENV AZIRE_DST ${AZIRE_DST}
+
+#COPY azirevpn-0.5.0/ /build/azirevpn-0.5.0/
+# ADD ${AZIRE_SRC} /build/
+
+ADD ${AZIRE_SRC} ${AZIRE_DST}
+RUN grep -q '.tar' <<< "${AZIRE_SRC}" && { tar xvf *.tar* && rm -vf *.tar*; } || true
+
+ARG AZIRE_DIR="azirevpn-0.5.0"
+ENV AZIRE_DIR ${AZIRE_DIR}
+
+ARG FULL_DIR="/build/${AZIRE_DIR}"
+ENV FULL_DIR ${FULL_DIR}
+
+WORKDIR ${FULL_DIR}
+
+RUN cd ${FULL_DIR} && make install-deps
+
+COPY build.sh /build/
+RUN chmod +x /build/build.sh
+
+
+ENV INSTALL_DEPS 0
+ENV BUILD_PKG 1
+ENV INSTALL_PKG 1
+ENV OUT_DIR /output
+
+
+CMD [ "/build/build.sh" ]
+

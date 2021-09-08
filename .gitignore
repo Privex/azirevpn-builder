@@ -1,0 +1,12 @@
+*.swp
+~*
+.env
+/*.env
+/*.tar.gz
+/*.tar.bz2
+/*.tar.xz
+Dockerfile.test
+/old*
+.debhelper
+*.log
+
